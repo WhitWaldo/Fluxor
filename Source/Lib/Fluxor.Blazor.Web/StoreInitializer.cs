@@ -60,6 +60,11 @@ public class StoreInitializer : FluxorComponent
 		base.OnInitialized();
 	}
 
+	protected override async Task OnInitializedAsync()
+	{
+		await Store.InitializeAsync();
+	}
+
 	protected override void OnAfterRender(bool firstRender)
 	{
 		base.OnAfterRender(firstRender);
@@ -83,8 +88,6 @@ public class StoreInitializer : FluxorComponent
 			{
 				if (!string.IsNullOrWhiteSpace(MiddlewareInitializationScripts))
 					await JSRuntime.InvokeVoidAsync("eval", MiddlewareInitializationScripts);
-
-				await Store.InitializeAsync();
 			}
 			catch (JSException err)
 			{
