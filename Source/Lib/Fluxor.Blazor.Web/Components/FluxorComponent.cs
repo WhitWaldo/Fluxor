@@ -67,6 +67,17 @@ public abstract class FluxorComponent : ComponentBase, IAsyncDisposable
 	}
 
 	/// <summary>
+		/// Initializes the store (primarily intended for WASM components and pages).
+		/// </summary>
+		protected override void async Task OnParametersSetAsync()
+		{
+			await base.OnParametersSetAsync();
+
+			//Attempt to initialize the store knowing that if it's already been initialized, this won't do anything
+			await Store.InitializeAsync();
+		}
+
+		/// <summary>
 	/// Disposes via IAsyncDisposable
 	/// </summary>
 	/// <param name="disposing">true if called manually, otherwise false</param>

@@ -64,6 +64,7 @@ public class StoreInitializer : FluxorComponent
 	protected override async Task OnInitializedAsync()
 	{
 		await Store.InitializeAsync();
+		await base.OnInitializedAsync();
 	}
 #endif
 
