@@ -15,6 +15,9 @@ public abstract class FluxorComponent : ComponentBase, IAsyncDisposable
 	[Inject]
 	private IActionSubscriber ActionSubscriber { get; set; }
 
+		[Inject]
+		private IStore Store { get; set; }
+
 	private bool Disposed;
 	private IDisposable StateSubscription;
 	private readonly ThrottledInvoker StateHasChangedThrottler;
@@ -22,7 +25,7 @@ public abstract class FluxorComponent : ComponentBase, IAsyncDisposable
 	/// <summary>
 	/// Creates a new instance
 	/// </summary>
-	public FluxorComponent()
+		protected FluxorComponent()
 	{
 		StateHasChangedThrottler = new ThrottledInvoker(() =>
 		{
@@ -66,18 +69,7 @@ public abstract class FluxorComponent : ComponentBase, IAsyncDisposable
 		await DisposeAsyncCore(true).ConfigureAwait(false);
 		GC.SuppressFinalize(this);
 	}
-
-		protected override async Task OnAfterRenderAsync(bool firstRender)
-		{
-			if (firstRender)
-			{
-				//Attempt to initialize the store knowing that if it's already been initialized, this won't do anything.
-				await Store.InitializeAsync();
-			}
-
-			await base.OnAfterRenderAsync(firstRender);
-		}
-
+		
 		/// <summary>
 	/// Disposes via IAsyncDisposable
 	/// </summary>
@@ -86,6 +78,15 @@ public abstract class FluxorComponent : ComponentBase, IAsyncDisposable
 	/// <exception cref="NullReferenceException">
 	///		Thrown when a descendant overrides DisposeAsyncCore and does call base.
 	/// </exception>
+
+			base.OnInitialized();
+		}
+
+		protected override async Task OnInitializedAsync()
+		{
+			//Attempt to initialize the store knowing that if it's already been initialized, this won't do anything.
+			await Store.InitializeAsync();
+			await base.OnInitializedAsync();
 	protected virtual ValueTask DisposeAsyncCore(bool disposing)
 	{
 		if (disposing)
