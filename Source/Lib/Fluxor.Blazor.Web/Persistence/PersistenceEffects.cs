@@ -17,12 +17,13 @@ namespace Fluxor.Blazor.Web.Persistence
 		{
 			_persistenceManager = persistenceManager;
 			_serviceProvider = serviceProvider;
+			_store = new(_serviceProvider.GetRequiredService<IStore>);
 		}
 
 		/// <summary>
 		/// Maintains a reference to IStore - injected this way to avoid a circular dependency during the effect method registration
 		/// </summary>
-		private readonly Lazy<IStore> _store = new(_serviceProvider.GetRequiredService<IStore>);
+		private readonly Lazy<IStore> _store;
 
 		[EffectMethod(typeof(StorePersistingAction))]
 		public async Task PersistStoreData(IDispatcher dispatcher)
