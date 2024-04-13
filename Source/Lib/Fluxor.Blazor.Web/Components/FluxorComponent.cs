@@ -1,6 +1,5 @@
 ﻿using Fluxor.UnsupportedClasses;
 using Microsoft.AspNetCore.Components;
-using System.Threading;
 using System;
 using System.Threading.Tasks;
 
@@ -69,24 +68,14 @@ public abstract class FluxorComponent : ComponentBase, IAsyncDisposable
 		await DisposeAsyncCore(true).ConfigureAwait(false);
 		GC.SuppressFinalize(this);
 	}
-		
-		/// <summary>
-	/// Disposes via IAsyncDisposable
-	/// </summary>
-	/// <param name="disposing">true if called manually, otherwise false</param>
-	/// <returns></returns>
-	/// <exception cref="NullReferenceException">
-	///		Thrown when a descendant overrides DisposeAsyncCore and does call base.
-	/// </exception>
 
-			base.OnInitialized();
-		}
+	protected override async Task OnInitializedAsync()
+	{
+		//Attempt to initialize the store knowing that if it's already been initialized, this won't do anything.
+		await Store.InitializeAsync();
+		await base.OnInitializedAsync();
+	}
 
-		protected override async Task OnInitializedAsync()
-		{
-			//Attempt to initialize the store knowing that if it's already been initialized, this won't do anything.
-			await Store.InitializeAsync();
-			await base.OnInitializedAsync();
 	protected virtual ValueTask DisposeAsyncCore(bool disposing)
 	{
 		if (disposing)

@@ -7,9 +7,9 @@ using System.Linq;
 #if NET6_0_OR_GREATER
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using Fluxor.Persistence;
 #endif
 using System.Threading.Tasks;
+using UnhandledExceptionEventArgs = Fluxor.Exceptions.UnhandledExceptionEventArgs;
 
 namespace Fluxor;
 
@@ -22,7 +22,7 @@ public class Store : IStore, IActionSubscriber, IDisposable
 	public Task Initialized => InitializedCompletionSource.Task;
 
 #if NET6_0_OR_GREATER
-		private readonly IPersistenceManager? _persistenceManager;
+		private readonly IPersistenceManager? PersistenceManager;
 #endif
 
 	private object SyncRoot = new object();
@@ -46,13 +46,12 @@ public class Store : IStore, IActionSubscriber, IDisposable
 	/// <summary>
 	/// Creates an instance of the store
 	/// </summary>
-		public Store(IDispatcher dispatcher, IPersistenceManager persistenceManager = null)
+		public Store(IDispatcher dispatcher, IPersistenceManager? persistenceManager = null)
 		{
-
-			_persistenceManager = persistenceManager;
-		ActionSubscriber = new ActionSubscriber();
+			PersistenceManager = persistenceManager;
+			ActionSubscriber = new ActionSubscriber();
 			Dispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));
-			Dispatcher.ActionDispatched += ActionDispatched;
+			Dispatcher.ActionDispatched += ActionDispatched!;
 			Dispatcher.Dispatch(new StoreInitializedAction());
 		}
 
@@ -123,7 +122,7 @@ public class Store : IStore, IActionSubscriber, IDisposable
 	/// <see cref="IStore.BeginInternalMiddlewareChange"/>
 	public IDisposable BeginInternalMiddlewareChange()
 	{
-		IDisposable[] disposables = null;
+		IDisposable[]? disposables;
 		lock (SyncRoot)
 		{
 			BeginMiddlewareChangeCount++;
@@ -145,7 +144,7 @@ public class Store : IStore, IActionSubscriber, IDisposable
 		await ActivateStoreAsync();
 	}
 
-	public event EventHandler<Exceptions.UnhandledExceptionEventArgs> UnhandledException;
+	public event EventHandler<UnhandledExceptionEventArgs>? UnhandledException;
 
 	/// <see cref="IActionSubscriber.SubscribeToAction{TAction}(object, Action{TAction})"/>
 	public void SubscribeToAction<TAction>(object subscriber, Action<TAction> callback)
@@ -168,7 +167,7 @@ public class Store : IStore, IActionSubscriber, IDisposable
 		if (!Disposed)
 		{
 			Disposed = true;
-			Dispatcher.ActionDispatched -= ActionDispatched;
+			Dispatcher.ActionDispatched -= ActionDispatched!;
 		}
 	}
 
@@ -296,7 +295,7 @@ public class Store : IStore, IActionSubscriber, IDisposable
 		lock (SyncRoot)
 		{
 #if NET6_0_OR_GREATER
-				if (_persistenceManager is not null)
+				if (PersistenceManager is not null)
 				{
 					//Rehydrate as necessary
 					Dispatcher.Dispatch(new StoreRehydratingAction());
@@ -324,7 +323,7 @@ public class Store : IStore, IActionSubscriber, IDisposable
 					QueuedActions.Enqueue(new StorePersistingAction());
 				}
 
-			while (QueuedActions.TryDequeue(out object nextActionToProcess))
+			while (QueuedActions.TryDequeue(out object? nextActionToProcess))
 			{
 				// Only process the action if no middleware vetos it
 				if (Middlewares.All(x => x.MayDispatchAction(nextActionToProcess)))
